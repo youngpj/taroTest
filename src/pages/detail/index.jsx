@@ -2,13 +2,31 @@ import { View, Text } from '@tarojs/components'
 import { useLoad } from '@tarojs/taro'
 import './index.scss'
 import React, { Component } from 'react';
+import { history } from '@tarojs/router'
 
 class detail extends Component {
+  unblock=()=>{}
   componentDidShow() {
     console.log('componentDidShow')
     //假如我返回的是相同的路由，这里每次都会调用 ，以前的版本这些是不调用的
-     window.history.pushState(null, null, document.URL);
-      window.addEventListener('popstate', this.webGoBack);
+    //  window.history.pushState(null, null, document.URL);
+    //   window.addEventListener('popstate', this.webGoBack);
+    this.unblock = history.block((tx) => {
+      // Navigation was blocked! Let's show a confirmation dialog
+      // so the user can decide if they actually want to navigate
+      // away and discard changes they've made in the current page.
+      let url = tx.location.pathname
+      if (window.confirm(`Are you sure you want to go to ${url}?`)) {
+        // Unblock the navigation.
+        this.unblock ()
+
+        // Retry the transition.
+        tx.retry()
+      }
+    })
+  }
+  componentWillUnmount(){
+    this.unblock 
   }
   webGoBack = () => {
     Taro.showModal({
